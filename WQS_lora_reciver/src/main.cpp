@@ -6,9 +6,9 @@ char recv;
 
 void setup() {
   Serial.begin(9600);
-  while(!Serial);
+  //while(!Serial);
 
-  Serial.println("LoRa Receiver");
+  //Serial.println("LoRa Receiver");
 
   if(!LoRa.begin(915E6)){
     Serial.println("Starting LoRa failed");
@@ -22,23 +22,25 @@ void loop(){
   int parameter = 0;
   int packetSize = LoRa.parsePacket();
   if(packetSize) {
-    Serial.print("  ORP value : ");
+    //Serial.print("  ORP value : ");
     String orpValue="";
     String phValue="";
     String tdsValue="";
     String doValue="";
     String turValue="";
+    String wateroutput;
+    StaticJsonDocument<200> doc;
     while(LoRa.available()){
       
       recv = (char)LoRa.read();
       
       if(recv == ' '){
-        Serial.println();
+        //Serial.println();
         parameter++;
-        if(parameter == 1) Serial.print("  PH value : ");
-        if(parameter == 2) Serial.print("  TDS value : ");
-        if(parameter == 3) Serial.print("  DO value : ");
-        if(parameter == 4) Serial.print("  TUR value : ");
+        //if(parameter == 1) Serial.print("  PH value : ");
+        //if(parameter == 2) Serial.print("  TDS value : ");
+        //if(parameter == 3) Serial.print("  DO value : ");
+        //if(parameter == 4) Serial.print("  TUR value : ");
       }
       else
       {
@@ -47,9 +49,10 @@ void loop(){
         if(parameter == 2) tdsValue += recv;
         if(parameter == 3) doValue += recv;
         if(parameter == 4) turValue += recv;
-        Serial.print(recv);
+        //Serial.print(recv);
       }
     }
+      /*
       Serial.println("-------lora-------");
       Serial.println(orpValue);
       Serial.println(phValue);
@@ -57,22 +60,13 @@ void loop(){
       Serial.println(doValue);
       Serial.println(turValue);
       Serial.println("-------String-------"); 
-}
- 
-  
-  
-  /*
-  String message = "";
-  int packetSize = LoRa.parsePacket();
-  if(packetSize) {
-  while (LoRa.available()) {
-    recv = (char)LoRa.read();
-    message += recv;
-  }
-
-  Serial.print("Node Receive: ");
-  Serial.println(message);
-  }
-  */
-
+      */
+      doc["orpValue"] = orpValue;
+      doc["phValue"] = phValue;
+      doc["tdsValue"] = tdsValue;
+      doc["doValue"] = doValue;
+      doc["turValue"] = turValue;
+      serializeJson(doc, wateroutput);
+      Serial.println(wateroutput);
+ }
 }
