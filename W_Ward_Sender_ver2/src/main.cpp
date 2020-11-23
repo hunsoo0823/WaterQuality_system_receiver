@@ -1,18 +1,13 @@
-/*
-
-void loop(void)
-{
-  int i;
-  double j=0.01;
-
-}
-*/
-
-
 #include <OneWire.h>  
 #include <DallasTemperature.h>   
 #include <Arduino.h>
 #include <U8x8lib.h>
+#include <PHSensor.h>
+#include <TDSSensor.h>
+#include <TURSensor.h>
+#include <DOSensor.h>
+#include <ORPSensor.h>
+#include <ArduinoJson.h>
 
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
@@ -29,8 +24,13 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);  
 //다비아스 주소를 저장할 배열 선언  
 DeviceAddress insideThermometer;  
-    
-    
+
+PHSensor phSensor(A3);
+TDSSensor tdsSensor(A4);
+TURSensor turSensor(A2);
+DOSensor doSensor(A1);
+ORPSensor orpSensor(A0);
+
 void setup(void)  
 {  
   // OLED 초기화
@@ -67,7 +67,7 @@ void printTemperature(DeviceAddress deviceAddress)
       
   Serial.print("Temp C: ");  
   Serial.print(tempC);  
-  Serial.print(" Temp F: ");  
+  Serial.print("Temp F: ");  
       
   //화씨 온도로 변환  
   Serial.println(DallasTemperature::toFahrenheit(tempC));   
@@ -80,7 +80,7 @@ void pre(void)
   u8x8.clear();
 
   u8x8.inverse();
-  u8x8.print(" Temp ");
+  u8x8.print(" DO Value ");
   u8x8.setFont(u8x8_font_chroma48medium8_r);  
   u8x8.noInverse();
   u8x8.setCursor(0,1);
@@ -93,14 +93,35 @@ void loop(void)
      
   //센서에서 읽어온 온도를 출력  
   //printTemperature(insideThermometer);  
-  
+  String wateroutput;
   //섭씨 온도를 가져옴  
-  float  tempC = sensors.getTempC(insideThermometer);  
+  double tempC = sensors.getTempC(insideThermometer);  
+  phSensor.getAnalogPH();
+  tdsSensor.temperature = tempC; 
+  doSensor.temperature = tempC; 
+  tdsSensor.getAnalogTDS();
+  turSensor.getAnalogTUR();
+  orpSensor.getAnalogORP();
 
   pre();
+  u8x8.print("temp: ");
+  u8x8.print(tempC);
   u8x8.setFont(u8x8_font_inb33_3x6_n);
-  u8x8.setCursor(0, 2);
-  u8x8.print(tempC);    
-  delay(2000);
+  u8x8.setCursor(0, 2);   
+  StaticJsonDocument<200> doc;
+  doc["orpValue"] = orpSensor.ORP;
+  doc["phValue"] = phSensor.PH;
+  doc["tdsValue"] = tdsSensor.TDS;
+  doc["doValue"] = doSensor.DO;
+  doc["turValue"] = turSensor.TUR;
+  serializeJson(doc, wateroutput);
+  Serial.println(wateroutput);
+
+  //u8x8.print(phSensor.PH); 
+  //u8x8.print(tdsSensor.TDS);
+  //u8x8.print(turSensor.TUR); 
+  //u8x8.print(doSensor.DO); 
+  //u8x8.print(oprSensor.ORP); 
+  delay(1000);
 }  
 
